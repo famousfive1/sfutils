@@ -23,3 +23,13 @@ pub fn read_file(filename : &String) -> Vec<String> {
 
     return s.lines().map(|line| line.to_string()).collect();
 }
+
+pub fn num_digits(mut n: usize) -> usize {
+    let mut ans = 0;
+    while n > 0 {
+        ans += 1;
+        n /= 10;
+    }
+    ans
+}
+

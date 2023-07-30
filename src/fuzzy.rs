@@ -1,17 +1,8 @@
 use crate::help::{self, read_file};
 
-fn num_digits(mut n: usize) -> usize {
-    let mut ans = 0;
-    while n > 0 {
-        ans += 1;
-        n /= 10;
-    }
-    ans
-}
-
 fn fuzzy_find(file: &Vec<String>, pattern: &String, case_insens: bool) -> Vec<String> {
     let mut ans: Vec<String> = vec![];
-    let mw = num_digits(file.len());
+    let mw = help::num_digits(file.len());
 
     for (i, line) in file.iter().enumerate() {
         if find_in_line(line, pattern, case_insens) {
@@ -45,13 +36,13 @@ fn find_in_line(line: &str, pattern: &str, case_insens: bool) -> bool {
 }
 
 pub fn fuzzy_file(args : Vec<String>) {
-    if args.len() > 5 {
+    if args.len() < 4 {
         help::print_help();
         return;
     }
 
     let mut case_insens = false;
-    if args.len() == 5 {
+    if args.len() > 4 {
         match args[4].as_str() {
             "i" => case_insens = true,
             _ => {
@@ -61,7 +52,7 @@ pub fn fuzzy_file(args : Vec<String>) {
         }
     }
 
-    let file = read_file(&args[1]);
+    let file = read_file(&args[2]);
     let found_lines = fuzzy_find(&file, &args[3], case_insens);
 
     if case_insens {

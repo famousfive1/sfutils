@@ -22,19 +22,10 @@ fn diff(a : &Vec<String>, b : &Vec<String>) -> Vec<Vec<usize>> {
     dp
 }
 
-fn get_max_width(mut n : usize) -> usize {
-    let mut ans = 0;
-    while n > 0 {
-        ans += 1;
-        n /= 10;
-    }
-    2 * ans
-}
-
 fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usize>>) -> (Vec<String>, usize, usize, usize) {
     let n = a.len();
     let m = b.len();
-    let mw = get_max_width(if n > m { n } else { m });
+    let mw = 2 * help::num_digits(if n > m { n } else { m });
     let mut ans: Vec<String> = Vec::new();
     let mut i = n;
     let mut j = m;
@@ -74,24 +65,29 @@ fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usi
 }
 
 pub fn diff_file(args : Vec<String>) {
-    let mut full = false;
-    if args.len() > 4 {
-        if args[4] == "f" || args[4] == "full" {
-            full = true;
-        }
-        else {
-            help::print_help();
-            return;
-        }
+    if args.len() < 4 {
+        help::print_help();
+        return;
     }
 
-    let s1 = help::read_file(&args[1]);
+    let mut full = false;
+    if args.len() > 4 {
+        match args[4].as_str() {
+            "f" | "full" => full = true,
+            _ => {
+                help::print_help();
+                return;
+            }
+        };
+    }
+
+    let s1 = help::read_file(&args[2]);
     let s2 = help::read_file(&args[3]);
 
     let dp = diff(&s1, &s2);
     let (diff, add, del, same) = get_diff_lines(&s1, &s2, full, &dp);
 
-    println!("# Add: {}; Del: {}; Same: {}", add, del, same);
+    println!("# Additions: {}; Deletions: {}; Same: {}", add, del, same);
     println!("Diff\n----");
     for l in diff {
         println!("{}", l);
