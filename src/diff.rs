@@ -1,3 +1,5 @@
+use console::style;
+
 use crate::help;
 
 fn diff(a : &Vec<String>, b : &Vec<String>) -> Vec<Vec<usize>> {
@@ -40,23 +42,23 @@ fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usi
             i -= 1;
             j -= 1;
         } else if dp[i - 1][j] > dp[i][j - 1] {
-            ans.push(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw));
+            ans.push(style(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw)).red().to_string());
             del += 1;
             i -= 1;
         } else {
-            ans.push(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw));
+            ans.push(style(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw)).green().to_string());
             add += 1;
             j -= 1;
         }
     }
 
     while i > 0 {
-        ans.push(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw));
+        ans.push(style(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw)).red().to_string());
         i -= 1;
     }
 
     while j > 0 {
-        ans.push(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw));
+        ans.push(style(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw)).green().to_string());
         j -= 1;
     }
 
