@@ -1,4 +1,4 @@
-# SFILS
+# SFUTILS
 ---
 ### Simple File Utils
 Implementation of some very simple file related utilities.

@@ -3,7 +3,7 @@ use std::fs::File;
 use std::path::Path;
 
 pub fn print_help() {
-    println!("Usage: diff <file> <option> <arg> <options>");
+    println!("Usage: sfu [op] [args] <options>");
 }
 
 pub fn read_file(filename : &String) -> Vec<String> {
