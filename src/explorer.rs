@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{self}, cmp::{max, min}};
+use std::{path::{Path, PathBuf}, fs::{self}, cmp::{max, min, Ordering}};
 
 use console::Term;
 
@@ -32,7 +32,7 @@ pub fn explore(args: Vec<String>) {
         match ch {
             'q' => break,
             '?' => print_explorer_help(&term),
-            'e' => enter_directory(&mut path, &mut entries, pointer),
+            'e' | '\n' => enter_directory(&mut path, &mut entries, &mut pointer),
             'j' => pointer = min(pointer+1, entries.len()),
             'k' => pointer = max(pointer-1, 1),
             _ => {},
@@ -42,17 +42,31 @@ pub fn explore(args: Vec<String>) {
 }
 
 fn get_entries(path: &PathBuf) -> Vec<(String, bool)> {
-    let entries = read_dir(&path);
+    let mut entries = read_dir(&path);
+    entries.sort_by(|a, b| {
+        if a.1 ^ b.1 {
+            if a.1 {
+                Ordering::Less
+            }
+            else {
+                Ordering::Greater
+            }
+        }
+        else {
+            a.0.cmp(&b.0)
+        }
+    });
     entries
 }
 
-fn enter_directory(path: &mut PathBuf, entries: &mut Vec<(String, bool)>, pointer: usize) {
-    if !entries[pointer - 1].1 {
+fn enter_directory(path: &mut PathBuf, entries: &mut Vec<(String, bool)>, pointer: &mut usize) {
+    if !entries[*pointer - 1].1 {
         return;
     }
 
-    *path = path.join(entries[pointer - 1].0.clone()).canonicalize().unwrap();
+    *path = path.join(entries[*pointer - 1].0.clone()).canonicalize().unwrap();
     *entries = get_entries(path);
+    *pointer = 1;
 }
 
 fn render(term: &Term, path: &PathBuf, pointer: usize, entries: &Vec<(String, bool)>) {
