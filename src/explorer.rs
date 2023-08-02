@@ -1,8 +1,6 @@
-use std::{path::{Path, PathBuf}, fs::{self}};
+use std::{path::{Path, PathBuf}, fs::{self}, cmp::{max, min}};
 
 use console::Term;
-
-use crate::help;
 
 pub fn explore(args: Vec<String>) {
     let mut cur_dir = String::from(".");
@@ -25,56 +23,42 @@ pub fn explore(args: Vec<String>) {
     }
 
     let term = Term::stdout();
-    let mut entries = render(&term, &path);
+    let mut entries = get_entries(&path);
+    let mut pointer = 1;
 
     loop {
+        render(&term, &path, pointer, &entries);
         let ch = term.read_char().unwrap();
-        let rerender: bool = match ch {
+        match ch {
             'q' => break,
-            '?' => { print_explorer_help(&term); true },
-            'e' => { enter_directory(&mut path, &term, &entries); true },
-            _ => false,
+            '?' => print_explorer_help(&term),
+            'e' => enter_directory(&mut path, &mut entries, pointer),
+            'j' => pointer = min(pointer+1, entries.len()),
+            'k' => pointer = max(pointer-1, 1),
+            _ => {},
         };
 
-        if rerender {
-            entries = render(&term, &path);
-        }
     }
 }
 
-fn enter_directory(path: &mut PathBuf, term: &Term, entries: &Vec<(String, bool)>) {
-    term.write_line("Enter #: ").unwrap();
-    let num = term.read_line().unwrap();
-    let num: usize = match num.parse() {
-        Ok(x) => x,
-        Err(_) => {
-            term.write_line("Not a number. Press any key to continue.").unwrap();
-            term.read_char().unwrap();
-            return;
-        }
-    };
-
-    if num < 1 || num > entries.len() {
-        term.write_line("Number out of range. Press any key to continue.").unwrap();
-        term.read_char().unwrap();
-        return;
-    }
-
-    if !entries[num-1].1 {
-        term.write_line("Not a directory. Press any key to continue.").unwrap();
-        term.read_char().unwrap();
-        return;
-    }
-
-    *path = path.join(entries[num-1].0.clone()).canonicalize().unwrap();
+fn get_entries(path: &PathBuf) -> Vec<(String, bool)> {
+    let entries = read_dir(&path);
+    entries
 }
 
-fn render(term: &Term, path: &PathBuf) -> Vec<(String, bool)> {
+fn enter_directory(path: &mut PathBuf, entries: &mut Vec<(String, bool)>, pointer: usize) {
+    if !entries[pointer - 1].1 {
+        return;
+    }
+
+    *path = path.join(entries[pointer - 1].0.clone()).canonicalize().unwrap();
+    *entries = get_entries(path);
+}
+
+fn render(term: &Term, path: &PathBuf, pointer: usize, entries: &Vec<(String, bool)>) {
     let _ = term.clear_screen();
     print_banner(&term, &path);
-    let entries = read_dir(&path);
-    print_dir(&term, &entries);
-    entries
+    print_dir(&term, &entries, pointer);
 }
 
 
@@ -97,33 +81,28 @@ fn read_dir(path: &PathBuf) -> Vec<(String, bool)> {
 }
 
 
-fn print_dir(term: &Term, entries: &Vec<(String, bool)>) {
-    let mw = help::num_digits(entries.len() + 2);
-
+fn print_dir(term: &Term, entries: &Vec<(String, bool)>, pointer: usize) {
     let mut row = 1;
-    // term.write_line(format!("{:>mw$} F ../", row, mw=mw).as_str()).unwrap(); row += 1;
-    // term.write_line(format!("{:>mw$} F ./", row, mw=mw).as_str()).unwrap(); row += 1;
 
     for i in entries {
         let _ = term.write_line(
-            format!("{:>mw$} {} {}",
-                row,
-                if i.1 {'F'} else {' '},
+            format!(" {} {} {}",
+                if row == pointer {"->"} else {"  "},
+                if i.1 {"F"} else {" "},
                 i.0,
-                mw=mw
             ).as_str()
         );
         row += 1;
     }
 
-    let _ = term.write_line("");
+    term.write_line("").unwrap();
 }
 
 fn print_explorer_help(term: &Term) {
-    let _ = term.clear_screen().unwrap();
-    let _ = term.write_line("? - This help menu").unwrap();
-    let _ = term.write_line("q - Exit").unwrap();
-    let _ = term.write_line("e - Enter directory by typing number and pressing enter").unwrap();
-    let _ = term.write_line("\nPress any key to return").unwrap();
-    let _ = term.read_char().unwrap();
+    term.clear_screen().unwrap();
+    term.write_line("? - This help menu").unwrap();
+    term.write_line("q - Exit").unwrap();
+    term.write_line("e - Enter directory by typing number and pressing enter").unwrap();
+    term.write_line("\nPress any key to return").unwrap();
+    term.read_char().unwrap();
 }
