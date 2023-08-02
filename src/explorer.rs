@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{self}, cmp::{max, min, Ordering}};
+use std::{path::{Path, PathBuf}, fs::{self}, cmp::Ordering};
 
 use console::Term;
 
@@ -41,10 +41,10 @@ fn start_app(path: PathBuf) {
         entries: &mut vec![],
         pointer: 1,
     };
+    app.update_entries();
+    app.render();
 
     loop {
-        app.update_entries();
-        app.render();
         let ch = term.read_char().unwrap();
         match ch {
             'q' => break,
@@ -70,6 +70,7 @@ impl<'a> Exp<'a> {
         *self.path = self.path.join(self.entries[self.pointer - 1].0.clone()).canonicalize().unwrap();
         *self.entries = Self::get_entries(self.path);
         self.pointer = 1;
+        self.render();
     }
 
     fn render(&self) {
@@ -79,11 +80,19 @@ impl<'a> Exp<'a> {
     }
 
     fn inc_pointer(&mut self) {
-        self.pointer = min(self.pointer + 1, self.entries.len());
+        if self.pointer == self.entries.len() {
+            return;
+        }
+        self.pointer = self.pointer + 1;
+        self.render();
     }
 
     fn dec_pointer(&mut self) {
-        self.pointer = max(1, self.pointer - 1);
+        if self.pointer == 1 {
+            return;
+        }
+        self.pointer = self.pointer - 1;
+        self.render();
     }
 
     fn get_entries(path: &PathBuf) -> Vec<(String, bool)> {
@@ -122,7 +131,6 @@ impl<'a> Exp<'a> {
         entries
     }
 
-
     fn print_dir(term: &Term, entries: &Vec<(String, bool)>, pointer: usize) {
         let mut row = 1;
 
@@ -144,8 +152,9 @@ impl<'a> Exp<'a> {
         self.term.clear_screen().unwrap();
         self.term.write_line("? - This help menu").unwrap();
         self.term.write_line("q - Exit").unwrap();
-        self.term.write_line("e - Enter directory by typing number and pressing enter").unwrap();
+        self.term.write_line("e - Enter directory by pointing to folder and press enter").unwrap();
         self.term.write_line("\nPress any key to return").unwrap();
         self.term.read_char().unwrap();
+        Self::render(&self);
     }
 }
