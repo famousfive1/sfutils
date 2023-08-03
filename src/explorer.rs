@@ -8,6 +8,8 @@ struct Exp<'a> {
     path: &'a mut PathBuf,
     entries: &'a mut Vec<(String, bool)>,
     pointer: usize,
+    top: usize,
+    bot: usize,
 }
 
 pub fn explore(args: Vec<String>) {
@@ -40,9 +42,11 @@ fn start_app(path: PathBuf) {
         path: &mut path.clone(),
         entries: &mut vec![],
         pointer: 1,
+        top: 1,
+        bot: 5,
     };
+    term.hide_cursor().unwrap();
     app.update_entries();
-    app.render();
 
     loop {
         let ch = term.read_char().unwrap();
@@ -52,6 +56,7 @@ fn start_app(path: PathBuf) {
             'e' | '\n' => app.enter_directory(),
             'k' => app.dec_pointer(),
             'j' => app.inc_pointer(),
+            'r' => app.update_entries(),
             _ => {},
         };
     }
@@ -60,6 +65,16 @@ fn start_app(path: PathBuf) {
 impl<'a> Exp<'a> {
     fn update_entries(&mut self) {
         *self.entries = Self::get_entries(&self.path);
+        *self.entries = Self::get_entries(self.path);
+        self.pointer = 1;
+        self.top = 1;
+        let (ht, _) = self.term.size();
+        let ht: usize = (ht - 5).into();
+        self.bot = self.top + ht;
+        if self.entries.len() < self.bot {
+            self.bot = self.entries.len();
+        }
+        self.render();
     }
 
     fn enter_directory(&mut self) {
@@ -68,15 +83,13 @@ impl<'a> Exp<'a> {
         }
 
         *self.path = self.path.join(self.entries[self.pointer - 1].0.clone()).canonicalize().unwrap();
-        *self.entries = Self::get_entries(self.path);
-        self.pointer = 1;
-        self.render();
+        self.update_entries();
     }
 
-    fn render(&self) {
+    fn render(&mut self) {
         let _ = self.term.clear_screen();
-        Self::print_banner(&self.term, &self.path);
-        Self::print_dir(&self.term, &self.entries, self.pointer);
+        Self::print_banner(&self.path);
+        self.print_dir();
     }
 
     fn inc_pointer(&mut self) {
@@ -113,10 +126,10 @@ impl<'a> Exp<'a> {
         entries
     }
 
-    fn print_banner(term: &Term, path: &Path) {
-        term.write_line("Press ? for help, q to quit").unwrap();
-        term.write_line(format!("Current directory: {}", path.to_str().unwrap()).as_str()).unwrap();
-        term.write_line("-----------------------------").unwrap();
+    fn print_banner(path: &Path) {
+        println!("Press ? for help, q to quit");
+        println!("Current directory: {}", path.to_str().unwrap());
+        println!("-----------------------------");
     }
 
     fn read_dir(path: &PathBuf) -> Vec<(String, bool)> {
@@ -131,30 +144,36 @@ impl<'a> Exp<'a> {
         entries
     }
 
-    fn print_dir(term: &Term, entries: &Vec<(String, bool)>, pointer: usize) {
-        let mut row = 1;
-
-        for i in entries {
-            let _ = term.write_line(
-                format!(" {} {} {}",
-                    if row == pointer {"->"} else {"  "},
-                    if i.1 {"F"} else {" "},
-                    i.0,
-                ).as_str()
-            );
-            row += 1;
+    fn print_dir(&mut self) {
+        let diff = self.bot - self.top;
+        if self.pointer < self.top {
+            self.top = self.pointer;
+            self.bot = self.top + diff;
+        }
+        else if self.pointer > self.bot {
+            self.bot = self.pointer;
+            self.top = self.bot - diff;
         }
 
-        term.write_line("").unwrap();
+        let mut row = self.top;
+
+        for i in &self.entries[(self.top-1)..(self.bot)] {
+            println!(" {} {} {}",
+                if row == self.pointer {"->"} else {"  "},
+                if i.1 {"F"} else {" "},
+                i.0);
+            row += 1;
+        }
     }
 
-    fn print_explorer_help(&self) {
+    fn print_explorer_help(&mut self) {
         self.term.clear_screen().unwrap();
-        self.term.write_line("? - This help menu").unwrap();
-        self.term.write_line("q - Exit").unwrap();
-        self.term.write_line("e - Enter directory by pointing to folder and press enter").unwrap();
-        self.term.write_line("\nPress any key to return").unwrap();
+        println!("? - This help menu");
+        println!("q - Exit");
+        println!("e - Enter directory by pointing to folder and press enter");
+        println!("r - Refresh content (also resizes to terminal)");
+        println!("\nPress any key to return");
         self.term.read_char().unwrap();
-        Self::render(&self);
+        self.render();
     }
 }
