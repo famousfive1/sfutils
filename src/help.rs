@@ -1,12 +1,12 @@
-use std::io::Read;
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 
 pub fn print_help() {
     println!("Usage: sfu [op] [args] <options>");
 }
 
-pub fn read_file(filename : &String) -> Vec<String> {
+pub fn read_file(filename: &String) -> Vec<String> {
     let path = Path::new(filename);
     let display = path.display();
 
@@ -32,4 +32,3 @@ pub fn num_digits(mut n: usize) -> usize {
     }
     ans
 }
-

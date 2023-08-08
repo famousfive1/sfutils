@@ -1,4 +1,8 @@
-use std::{path::{Path, PathBuf}, fs::{self}, cmp::Ordering};
+use std::{
+    cmp::Ordering,
+    fs::{self},
+    path::{Path, PathBuf},
+};
 
 use console::Term;
 
@@ -20,7 +24,7 @@ pub fn explore(args: Vec<String>) {
 
     let path = Path::new(&cur_dir).canonicalize().unwrap();
     match path.try_exists() {
-        Ok(true) => {},
+        Ok(true) => {}
         Ok(false) | Err(_) => {
             println!("Cannot find directory: {}", cur_dir);
             return;
@@ -57,7 +61,7 @@ fn start_app(path: PathBuf) {
             'k' => app.dec_pointer(),
             'j' => app.inc_pointer(),
             'r' => app.update_entries(),
-            _ => {},
+            _ => {}
         };
     }
 }
@@ -82,7 +86,11 @@ impl<'a> Exp<'a> {
             return;
         }
 
-        *self.path = self.path.join(self.entries[self.pointer - 1].0.clone()).canonicalize().unwrap();
+        *self.path = self
+            .path
+            .join(self.entries[self.pointer - 1].0.clone())
+            .canonicalize()
+            .unwrap();
         self.update_entries();
     }
 
@@ -114,12 +122,10 @@ impl<'a> Exp<'a> {
             if a.1 ^ b.1 {
                 if a.1 {
                     Ordering::Less
-                }
-                else {
+                } else {
                     Ordering::Greater
                 }
-            }
-            else {
+            } else {
                 a.0.cmp(&b.0)
             }
         });
@@ -139,7 +145,10 @@ impl<'a> Exp<'a> {
         entries.push((".".to_string(), true));
         for i in read_dir {
             let j = i.unwrap();
-            entries.push((j.file_name().to_str().unwrap().to_string(), j.file_type().unwrap().is_dir()));
+            entries.push((
+                j.file_name().to_str().unwrap().to_string(),
+                j.file_type().unwrap().is_dir(),
+            ));
         }
         entries
     }
@@ -149,19 +158,20 @@ impl<'a> Exp<'a> {
         if self.pointer < self.top {
             self.top = self.pointer;
             self.bot = self.top + diff;
-        }
-        else if self.pointer > self.bot {
+        } else if self.pointer > self.bot {
             self.bot = self.pointer;
             self.top = self.bot - diff;
         }
 
         let mut row = self.top;
 
-        for i in &self.entries[(self.top-1)..(self.bot)] {
-            println!(" {} {} {}",
-                if row == self.pointer {"->"} else {"  "},
-                if i.1 {"F"} else {" "},
-                i.0);
+        for i in &self.entries[(self.top - 1)..(self.bot)] {
+            println!(
+                " {} {} {}",
+                if row == self.pointer { "->" } else { "  " },
+                if i.1 { "F" } else { " " },
+                i.0
+            );
             row += 1;
         }
     }

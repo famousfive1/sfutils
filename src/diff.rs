@@ -2,7 +2,7 @@ use console::style;
 
 use crate::help;
 
-fn diff(a : &Vec<String>, b : &Vec<String>) -> Vec<Vec<usize>> {
+fn diff(a: &Vec<String>, b: &Vec<String>) -> Vec<Vec<usize>> {
     let n = a.len();
     let m = b.len();
 
@@ -24,7 +24,12 @@ fn diff(a : &Vec<String>, b : &Vec<String>) -> Vec<Vec<usize>> {
     dp
 }
 
-fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usize>>) -> (Vec<String>, usize, usize, usize) {
+fn get_diff_lines(
+    a: &Vec<String>,
+    b: &Vec<String>,
+    full: bool,
+    dp: &Vec<Vec<usize>>,
+) -> (Vec<String>, usize, usize, usize) {
     let n = a.len();
     let m = b.len();
     let mw = 2 * help::num_digits(if n > m { n } else { m });
@@ -37,28 +42,44 @@ fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usi
     while i > 0 && j > 0 {
         if a[i - 1] == b[j - 1] {
             if full {
-                ans.push(format!("{:<mw$}    {}", i, a[i - 1], mw=mw));
+                ans.push(format!("{:<mw$}    {}", i, a[i - 1], mw = mw));
             }
             i -= 1;
             j -= 1;
         } else if dp[i - 1][j] > dp[i][j - 1] {
-            ans.push(style(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw)).red().to_string());
+            ans.push(
+                style(format!("{:<mw$} -- {}", i, a[i - 1], mw = mw))
+                    .red()
+                    .to_string(),
+            );
             del += 1;
             i -= 1;
         } else {
-            ans.push(style(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw)).green().to_string());
+            ans.push(
+                style(format!("{:>mw$} ++ {}", j, b[j - 1], mw = mw))
+                    .green()
+                    .to_string(),
+            );
             add += 1;
             j -= 1;
         }
     }
 
     while i > 0 {
-        ans.push(style(format!("{:<mw$} -- {}", i, a[i - 1], mw=mw)).red().to_string());
+        ans.push(
+            style(format!("{:<mw$} -- {}", i, a[i - 1], mw = mw))
+                .red()
+                .to_string(),
+        );
         i -= 1;
     }
 
     while j > 0 {
-        ans.push(style(format!("{:>mw$} ++ {}", j, b[j - 1], mw=mw)).green().to_string());
+        ans.push(
+            style(format!("{:>mw$} ++ {}", j, b[j - 1], mw = mw))
+                .green()
+                .to_string(),
+        );
         j -= 1;
     }
 
@@ -66,7 +87,7 @@ fn get_diff_lines(a: &Vec<String>, b: &Vec<String>, full: bool, dp: &Vec<Vec<usi
     (ans, add, del, dp[n][m])
 }
 
-pub fn diff_file(args : Vec<String>) {
+pub fn diff_file(args: Vec<String>) {
     if args.len() < 4 {
         help::print_help();
         return;

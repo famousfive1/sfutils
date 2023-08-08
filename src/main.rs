@@ -1,9 +1,9 @@
 use std::env;
 
 mod diff;
-mod help;
-mod fuzzy;
 mod explorer;
+mod fuzzy;
+mod help;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

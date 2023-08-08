@@ -6,7 +6,7 @@ fn fuzzy_find(file: &Vec<String>, pattern: &String, case_insens: bool) -> Vec<St
 
     for (i, line) in file.iter().enumerate() {
         if find_in_line(line, pattern, case_insens) {
-            ans.push(format!("{:>mw$} {}", i, line.clone(), mw=mw));
+            ans.push(format!("{:>mw$} {}", i, line.clone(), mw = mw));
         }
     }
 
@@ -14,11 +14,25 @@ fn fuzzy_find(file: &Vec<String>, pattern: &String, case_insens: bool) -> Vec<St
 }
 
 fn find_in_line(line: &str, pattern: &str, case_insens: bool) -> bool {
-    let line: Vec<char> = line.chars()
-        .map(|c| if case_insens {c.to_ascii_lowercase()} else {c})
+    let line: Vec<char> = line
+        .chars()
+        .map(|c| {
+            if case_insens {
+                c.to_ascii_lowercase()
+            } else {
+                c
+            }
+        })
         .collect();
-    let pattern: Vec<char> = pattern.chars()
-        .map(|c| if case_insens {c.to_ascii_lowercase()} else {c})
+    let pattern: Vec<char> = pattern
+        .chars()
+        .map(|c| {
+            if case_insens {
+                c.to_ascii_lowercase()
+            } else {
+                c
+            }
+        })
         .collect();
     let n = line.len();
     let m = pattern.len();
@@ -35,7 +49,7 @@ fn find_in_line(line: &str, pattern: &str, case_insens: bool) -> bool {
     j == m
 }
 
-pub fn fuzzy_file(args : Vec<String>) {
+pub fn fuzzy_file(args: Vec<String>) {
     if args.len() < 4 {
         help::print_help();
         return;
@@ -57,8 +71,7 @@ pub fn fuzzy_file(args : Vec<String>) {
 
     if case_insens {
         println!("Fuzzy find case-insensitive: {}", &args[3]);
-    }
-    else {
+    } else {
         println!("Fuzzy find : {}", &args[3]);
     }
     println!("Found {} matches", found_lines.len());
@@ -67,4 +80,3 @@ pub fn fuzzy_file(args : Vec<String>) {
         println!("{line}");
     }
 }
-
